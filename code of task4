@@ -1,0 +1,111 @@
+#1.Choose a binary classification dataset
+#import the necessary
+
+from sklearn.datasets import load_breast_cancer
+import pandas as pd
+
+# Load dataset
+data = load_breast_cancer()
+df = pd.DataFrame(data.data, columns=data.feature_names)
+df['target'] = data.target
+
+# Optional: Check class distribution
+print(df['target'].value_counts())
+
+output:
+target
+1    357
+0    212
+Name: count, dtype: int64
+
+#2: Train/test split and standardize features
+
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+
+# Split features and target
+X = df.drop('target', axis=1)
+y = df['target']
+
+# Train/test split
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Standardize features
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
+
+
+#Fit a Logistic Regression model
+
+from sklearn.linear_model import LogisticRegression
+
+# Train the model
+model = LogisticRegression(max_iter=10000)
+model.fit(X_train, y_train)
+
+# Predict probabilities and classes
+y_prob = model.predict_proba(X_test)[:, 1]  # Probabilities for class 1
+y_pred = model.predict(X_test)             # Final class predictions
+
+
+#4.Evaluate with confusion matrix, precision, recall, ROC-AUC
+
+from sklearn.metrics import confusion_matrix, classification_report, precision_score, recall_score, roc_auc_score, roc_curve
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Confusion matrix
+cm = confusion_matrix(y_test, y_pred)
+sns.heatmap(cm, annot=True, fmt='d', cmap='Blues')
+plt.title("Confusion Matrix")
+plt.xlabel("Predicted")
+plt.ylabel("Actual")
+plt.show()
+
+# Print metrics
+print("Classification Report:\n", classification_report(y_test, y_pred))
+print("Precision:", precision_score(y_test, y_pred))
+print("Recall:", recall_score(y_test, y_pred))
+print("ROC-AUC Score:", roc_auc_score(y_test, y_prob))
+
+# ROC Curve
+fpr, tpr, thresholds = roc_curve(y_test, y_prob)
+plt.plot(fpr, tpr, label=f"AUC = {roc_auc_score(y_test, y_prob):.2f}")
+plt.plot([0, 1], [0, 1], 'k--')
+plt.xlabel("False Positive Rate")
+plt.ylabel("True Positive Rate")
+plt.title("ROC Curve")
+plt.legend()
+plt.grid()
+plt.show()
+
+
+#5 Tune threshold and explain sigmoid function
+
+# Change threshold
+threshold = 0.3
+y_pred_custom = (y_prob >= threshold).astype(int)
+
+# New confusion matrix
+cm_custom = confusion_matrix(y_test, y_pred_custom)
+sns.heatmap(cm_custom, annot=True, fmt='d', cmap='Oranges')
+plt.title(f"Confusion Matrix (Threshold = {threshold})")
+plt.xlabel("Predicted")
+plt.ylabel("Actual")
+plt.show()
+
+
+#sigmoid function 
+import numpy as np
+
+z = np.linspace(-10, 10, 100)
+sigmoid = 1 / (1 + np.exp(-z))
+
+plt.plot(z, sigmoid)
+plt.title("Sigmoid Function")
+plt.xlabel("z")
+plt.ylabel("sigmoid(z)")
+plt.grid()
+plt.show()
+
